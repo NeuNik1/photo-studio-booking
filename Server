@@ -1,0 +1,46 @@
+// server/index.js
+const express = require('express');
+const sqlite3 = require('sqlite3');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+
+const db = new sqlite3.Database('./bookings.db');
+
+// Создание таблиц
+db.serialize(() => {
+  db.run(`
+    CREATE TABLE IF NOT EXISTS bookings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      time TEXT NOT NULL,
+      client_name TEXT NOT NULL,
+      client_phone TEXT NOT NULL,
+      services TEXT NOT NULL,
+      total_price REAL NOT NULL
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS services (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      price REAL NOT NULL
+    )
+  `);
+});
+
+// API для получения записей
+app.get('/api/bookings', (req, res) => {
+  db.all('SELECT * FROM bookings', (err, rows) => {
+    res.json(rows);
+  });
+});
+
+// Запуск сервера
+app.listen(5000, () => {
+  console.log('Server is running on port 5000');
+});
